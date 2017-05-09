@@ -10,7 +10,7 @@ const req = request.defaults({
 })
 
 test.before.cb((t) => {
-    let app = koa()
+    let app = new koa()
 
     app.use(cors({
         maxAge: 10000,
@@ -18,8 +18,8 @@ test.before.cb((t) => {
         exposeHeaders: ['x-token'],
         origin: ['http://halojs.com', /http:\/\/halo.com/]
     }))
-    app.use(mount('/cors', function *() {
-        this.body = { ok: 1 }
+    app.use(mount('/cors', async function(ctx, next) {
+        ctx.body = { ok: 1 }
     }))
     app.listen(3000, t.end)
 })
@@ -106,7 +106,7 @@ test.cb('preflight request, but no set Access-Control-Request-Method header', (t
 })
 
 test.cb('origin is *', (t) => {
-    koa().use(cors({
+    (new koa()).use(cors({
         maxAge: 10000,
         credentials: true,
         exposeHeaders: ['x-token'],

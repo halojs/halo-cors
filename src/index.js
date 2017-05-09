@@ -11,59 +11,59 @@ export default function (options) {
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'PATCH']
     }, options)
 
-    return function* _cors(next) {
+    return async function _cors(ctx, next) {
         let origin, allowedHeaders
         
-        origin = this.get('Origin')
+        origin = ctx.get('Origin')
 
         if (!origin) {
-            return yield* next
+            return await next()
         }
         
         if (!isAllowOrigin(options.origin, origin)) {
-            return yield* next
+            return await next()
         }
 
-        if (this.method.toUpperCase() === 'OPTIONS' && !this.get('Access-Control-Request-Method')) {
-            return yield* next
+        if (ctx.method.toUpperCase() === 'OPTIONS' && !ctx.get('Access-Control-Request-Method')) {
+            return await next()
         }
         
         if (!options.origin.includes('*')) {
-            this.vary('Origin')
+            ctx.vary('Origin')
         }
 
-        this.set('Access-Control-Allow-Origin', options.origin.includes('*') ? '*' : origin)
+        ctx.set('Access-Control-Allow-Origin', options.origin.includes('*') ? '*' : origin)
 
         if (options.credentials && !options.origin.includes('*')) {
-            this.set('Access-Control-Allow-Credentials', 'true')
+            ctx.set('Access-Control-Allow-Credentials', 'true')
         }
 
-        if (this.method.toUpperCase() === 'OPTIONS') {
+        if (ctx.method.toUpperCase() === 'OPTIONS') {
             allowedHeaders = options.allowedHeaders.join(',')
 
             if (options.methods.length) {
-                this.set('Access-Control-Allow-Methods', options.methods.join(','))
+                ctx.set('Access-Control-Allow-Methods', options.methods.join(','))
             }
 
             if (options.maxAge) {
-                this.set('Access-Control-Max-Age', options.maxAge.toString())
+                ctx.set('Access-Control-Max-Age', options.maxAge.toString())
             }
 
             if (!allowedHeaders) {
-                allowedHeaders = this.get('Access-Control-Request-Headers')
+                allowedHeaders = ctx.get('Access-Control-Request-Headers')
             }
 
             if (allowedHeaders) {
-                this.set('Access-Control-Allow-Headers', allowedHeaders)
+                ctx.set('Access-Control-Allow-Headers', allowedHeaders)
             }
 
-            this.status = 204
+            ctx.status = 204
         } else {
             if (options.exposeHeaders.length) {
-                this.set('Access-Control-Expose-Headers', options.exposeHeaders.join(','))
+                ctx.set('Access-Control-Expose-Headers', options.exposeHeaders.join(','))
             }
 
-            yield* next
+            await next()
         }
     }
 }
